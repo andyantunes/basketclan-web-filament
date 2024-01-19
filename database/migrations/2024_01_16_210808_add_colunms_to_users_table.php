@@ -16,6 +16,9 @@ return new class extends Migration
             $table->string('birthdate', 10)->after('phone')->nullable();
             $table->string('cpf', 20)->after('birthdate')->nullable();
             $table->string('rg', 20)->after('cpf')->nullable();
+            $table->string('nickname')->after('rg')->nullable();
+            $table->integer('jersey_number')->after('nickname')->nullable();
+            $table->softDeletes()->after('updated_at');
         });
     }
 
@@ -25,7 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['phone', 'birthdate', 'cpf', 'rg']);
+            $table->dropColumn(['phone', 'birthdate', 'cpf', 'rg', 'nickname', 'jersey_number']);
         });
     }
 };

@@ -3,69 +3,36 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use App\Services\UserService;
 use Filament\Forms;
-use Filament\Forms\Components\{Fieldset, TextInput};
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Support\Enums\Alignment;
+use Filament\Tables\Actions\{ActionGroup, BulkActionGroup, DeleteBulkAction, EditAction};
+use Filament\Tables\Columns\{TextColumn};
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $modelLabel = 'Usuário';
+    protected static ?string $modelLabel = 'Integrante';
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $slug = 'usuarios';
+    protected static ?string $slug = 'integrantes';
 
-    public static ?string $pluralModelLabel = 'Usuários';
+    public static ?string $pluralModelLabel = 'Integrantes';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Fieldset::make('Dados do usuário')
-                    ->schema([
-                        TextInput::make('name')
-                            ->label('Nome Completo')
-                            ->required()
-                            ->maxLength(255),
-
-                        TextInput::make('email')
-                            ->label('E-mail')
-                            ->email()
-                            ->required()
-                            ->maxLength(255),
-
-                        TextInput::make('phone')
-                            ->label('Telefone')
-                            ->tel()
-                            ->maxLength(15),
-
-                        TextInput::make('birthdate')
-                            ->label('Data de Nascimento')
-                            ->maxLength(10),
-
-                        TextInput::make('cpf')
-                            ->label('CPF')
-                            ->validationAttribute('CPF')
-                            ->minLength(14)
-                            ->maxLength(20),
-
-                        TextInput::make('rg')
-                            ->label('RG')
-                            ->validationAttribute('RG')
-                            ->minLength(12)
-                            ->maxLength(20),
-                    ])
+                self::getFormSchema('user'),
+                self::getFormSchema('address'),
             ]);
     }
 
@@ -73,56 +40,79 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                TextColumn::make('jersey_number')
+                    ->label('Camiseta')
+                    ->formatStateUsing(fn (string $state) => "#{$state}")
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email')
+
+                TextColumn::make('name')
+                    ->label('Nome Completo')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
+
+                TextColumn::make('nickname')
+                    ->label('Apelido')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('birthdate')
+
+                TextColumn::make('email')
+                    ->label('E-mail')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('cpf')
+
+                TextColumn::make('phone')
+                    ->label('Telefone')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('rg')
+
+                TextColumn::make('birthdate')
+                    ->label('Data de Nascimento')
+                    ->alignment(Alignment::Center)
                     ->searchable(),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
+
+                TextColumn::make('cpf')
+                    ->label('CPF')
+                    ->alignment(Alignment::Center)
+                    ->searchable(),
+
+                TextColumn::make('rg')
+                    ->label('RG')
+                    ->alignment(Alignment::Center)
+                    ->searchable()
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->color('warning')
+                ])->tooltip('Ações'),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\ListUsers::route('/'),
-            'create' => Pages\CreateUser::route('/create'),
-            'edit' => Pages\EditUser::route('/{record}/edit'),
+            'create' => Pages\CreateUser::route('/criar'),
+            'edit' => Pages\EditUser::route('/{record}/editar'),
         ];
+    }
+
+    private static function getFormSchema(string $type)
+    {
+        switch ($type) {
+            case 'user':
+                return UserService::getUserDataSchema();
+
+                break;
+
+            case 'address':
+                return UserService::getAddressDataSchema();
+
+                break;
+
+            default:
+                break;
+        }
     }
 }
