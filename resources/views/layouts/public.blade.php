@@ -24,19 +24,21 @@
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         <!-- Page Content -->
         <main>
-            {{-- {{ $slot }} --}}
+            {{ $slot }}
             {{-- <livewire:components.landing.header /> --}}
 
-            <div>
+            {{-- <div>
                 <livewire:widgets.users-swiper />
-            </div>
+            </div> --}}
 
             {{-- <livewire:components.landing.footer /> --}}
         </main>
     </div>
 
+    
     @stack('modals')
     @livewireScripts
+    @filamentScripts
     @stack('scripts')
 </body>
 
