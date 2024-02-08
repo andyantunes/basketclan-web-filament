@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('district');
             $table->string('complement')->nullable();
             $table->string('postal_code', 9);
+            $table->string('country')->default('Brasil');
             $table->timestamps();
         });
     }

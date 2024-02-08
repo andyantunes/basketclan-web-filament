@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('rg', 20)->after('cpf')->nullable();
             $table->string('nickname')->after('rg')->nullable();
             $table->integer('jersey_number')->after('nickname')->nullable();
+            $table->string('avatar')->after('jersey_number')->nullable();
+            $table->string('identity_document')->after('avatar')->nullable();
+            $table->string('address_proof')->after('identity_document')->nullable();
+            $table->string('photo')->after('address_proof')->nullable();
             $table->softDeletes()->after('updated_at');
         });
     }

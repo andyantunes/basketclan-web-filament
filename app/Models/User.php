@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\{BelongsToMany, HasOne};
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -28,6 +29,9 @@ class User extends Authenticatable
         'nickname',
         'jersey_number',
         'password',
+        'identity_document',
+        'address_proof',
+        'photo',
     ];
 
     /**
@@ -50,8 +54,23 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function address(): HasOne
+    public function addresses(): HasOne
     {
         return $this->hasOne(Address::class);
+    }
+
+    public function financials(): BelongsToMany
+    {
+        return $this->belongsToMany(Finance::class);
+    }
+
+    /**
+     * Verifica se o usuário logado é um Administrador
+     *
+     * @return bool
+     */
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('Admin');
     }
 }

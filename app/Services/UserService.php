@@ -2,17 +2,23 @@
 
 namespace App\Services;
 
-use Filament\Forms\Components\{Fieldset, Grid, TextInput};
+use App\Models\User;
+use Filament\Forms\Components\{Fieldset, FileUpload, Grid, Select, TextInput};
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rules\Unique;
 use Leandrocfe\FilamentPtbrFormFields\{Cep, Document};
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+
 
 class UserService
 {
-    public static function getUserDataSchema()
+    private static string $storageDirectory = '/users/documents';
+
+    public static function getUserDataSchema(): Fieldset
     {
         return Fieldset::make('Dados Pessoais')
             ->id('formUserData')
             ->schema([
-
                 Grid::make()
                     ->schema([
                         TextInput::make('name')
@@ -20,7 +26,6 @@ class UserService
                             ->placeholder('Nome Completo')
                             ->required()
                             ->columnSpan(2),
-
 
                         TextInput::make('nickname')
                             ->label('Apelido')
@@ -34,6 +39,15 @@ class UserService
                             ->placeholder('E-mail')
                             ->email()
                             ->required()
+                            ->unique(
+                                'users',
+                                'email',
+                                modifyRuleUsing: function (?User $record, Unique $rule) {
+                                    $value = !is_null($record) ? (string)$record->id : '';
+
+                                    return $rule->whereNot('id', $value);
+                                },
+                            )
                             ->columnSpan(2),
                     ])
                     ->columns(6),
@@ -77,18 +91,28 @@ class UserService
 
                         TextInput::make('jersey_number')
                             ->label('Número Camiseta')
-                            ->placeholder('Número da camiseta')
+                            ->placeholder('Número camiseta')
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(99)
                             ->validationAttribute('Número')
                             ->columnSpan(1),
+
+
+                        Select::make('role_id')
+                            ->label('Perfil')
+                            ->relationship(
+                                'roles',
+                                'name',
+                                fn (Builder $query) => self::handleAdminRoleOnSelect($query)
+                            )
+                            ->required(),
                     ])
                     ->columns(6),
             ]);
     }
 
-    public static function getAddressDataSchema()
+    public static function getAddressDataSchema(): Fieldset
     {
         return Fieldset::make('Endereço')
             ->id('formAddress')
@@ -166,8 +190,61 @@ class UserService
                             ->columnSpan(['md' => 1, 'sm' => 1]),
                     ])
                     ->columns(['md' => 8, 'sm' => 1,]),
-
-
             ]);
+    }
+
+    public static function getAttachmentSchema(): Fieldset
+    {
+        return Fieldset::make('Anexos')
+            ->id('formAttachmentData')
+            ->schema([
+                Grid::make(['sm' => 1])
+                    ->schema([
+                        FileUpload::make('identity_document')
+                            ->label('CNH ou RG')
+                            ->downloadable()
+                            ->moveFiles()
+                            ->openable()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->visibility('public')
+                            ->directory(self::$storageDirectory)
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalExtension())
+                                    ->prepend('identity_document.'),
+                            ),
+
+                        FileUpload::make('address_proof')
+                            ->label('Comprovante de Endereço')
+                            ->downloadable()
+                            ->moveFiles()
+                            ->openable()
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->visibility('public')
+                            ->directory(self::$storageDirectory)
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalExtension())
+                                    ->prepend('address_proof.'),
+                            ),
+
+                        FileUpload::make('photo')
+                            ->label('Foto')
+                            ->image()
+                            ->downloadable()
+                            ->moveFiles()
+                            ->openable()
+                            ->visibility('public')
+                            ->directory(self::$storageDirectory)
+                            ->getUploadedFileNameForStorageUsing(
+                                fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalExtension())
+                                    ->prepend('photo.'),
+                            )
+                    ])
+                    ->columns(['md' => 3, 'sm' => 1])
+            ]);
+    }
+
+    private static function handleAdminRoleOnSelect(Builder $query): null|Builder
+    {
+        return $query->where('name', '!=', 'Admin');
     }
 }
