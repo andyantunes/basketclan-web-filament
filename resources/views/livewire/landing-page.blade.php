@@ -1,9 +1,9 @@
-<x-public-layout>
+<div>
     {{-- <livewire:components.landing.header /> --}}
 
     <div>
-        {{-- <livewire:widgets.users-swiper /> --}}
+        {{$this->landingPageInfolist}}
     </div>
 
     {{-- <livewire:components.landing.footer /> --}}
-</x-public-layout>
+</div>
